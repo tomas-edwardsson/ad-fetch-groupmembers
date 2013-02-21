@@ -4,7 +4,7 @@ Release:	1%{?dist}
 Summary:	Fetches groupmembers from Active Directory for use in httpd
 
 Group:		Applications/System
-License:	GPLv2
+License:	GPLv3
 URL:		https://github.com/tomas-edwardsson/ad-fetch-groupmembers
 Source0:	%{name}-%{version}.tar.gz
 
@@ -35,7 +35,7 @@ install -D -m 600 ad-fetch-groupmembers.cfg $RPM_BUILD_ROOT/%{_sysconfdir}/ad-fe
 install -D -m 755 ad-fetch-groupmembers $RPM_BUILD_ROOT/%{_bindir}/ad-fetch-groupmembers
 
 %files
-%doc README.md LICENSE
+%doc README.md gpl-3.0.txt
 %{_sysconfdir}/ad-fetch-groupmembers.cfg
 %{_bindir}/ad-fetch-groupmembers
 
