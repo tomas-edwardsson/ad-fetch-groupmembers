@@ -1,0 +1,143 @@
+#!/usr/bin/python -tt
+#
+# Copyright 2010, Tomas Edwardsson 
+#
+# ad-fetch-groupmembers is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# ad-fetch-groupmembers is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# This script fetches group members from a LDAP database
+# it has support for nested groups and in it's current form creates
+# Apache httpd "Require users" statements for each group.
+
+
+import ldap
+import ConfigParser
+import sys
+
+class AdFetchMembers:
+	config_path = "/etc/ad-fetch-groupmembers.cfg"
+
+	def __init__(self):
+		self.config = ConfigParser.SafeConfigParser()
+		self.ldap_conn = None
+		self.server = ''
+		self.realm = ''
+		self.binddn = ''
+
+	def read_config(self):
+		self.config.read(AdFetchMembers.config_path)
+
+		try:
+			self.server = self.config.get('main', 'server')
+			self.binddn = self.config.get('main', 'binddn')
+			self.bindpw = self.config.get('main', 'bindpw')
+			self.realm = self.config.get('main', 'realm')
+		except ConfigParser.NoOptionError, e:
+			print "%s in %s" % (e, AdFetchMembers.config_path)
+			sys.exit(2)
+
+		if not self.server:
+			print "server is required in section main of %s" % (AdFetchMembers.config_path)
+			sys.exit(3)
+
+	def ldap_connect(self):
+		if self.ldap_conn is None:
+			try:
+				self.ldap_conn = ldap.open(self.server)
+				if self.binddn:
+					self.ldap_conn.simple_bind_s(self.binddn, self.bindpw)
+
+			except ldap.LDAPError, error_message:
+				print "Couldn't Connect. %s " % error_message
+				sys.exit(4)
+		return self.ldap_conn
+
+		
+	def ldap_search(self, base):
+		scope = ldap.SCOPE_BASE
+		retrieve_attributes = None
+		result_set = []
+		timeout = 0
+		try:
+			result_id = self.ldap_conn.search(base, scope, 
+				"(|(objectclass=person)(objectclass=group))", retrieve_attributes)
+			while 1:
+				result_type, result_data = self.ldap_conn.result(result_id, timeout)
+				if (result_data == []):
+					break
+				else:
+					if result_type == ldap.RES_SEARCH_ENTRY:
+						result_set.append(result_data[0])
+			if len(result_set) == 0:
+				print "No Results for %s." % (base)
+				sys.exit(4)
+		except ldap.LDAPError, error_message:
+			print error_message
+			sys.exit(5)
+		return result_set
+
+	def parseUser(self, user):
+		rs = self.ldap_search(user)
+
+		return rs[0][1]['sAMAccountName'][0].lower() + '@' + self.realm
+
+	def parseGroup(self, group):
+		rs = self.ldap_search(group)
+		
+		groupMembers = []
+		nestedGroupList = []
+
+		for ldap_result in rs:
+			if 'group' in ldap_result[1]['objectClass'] and ldap_result[1].has_key('member'):
+				for member in ldap_result[1]['member']:
+					memberResult = self.parseGroup(member)
+					if type(memberResult) is str:
+						# The member is a person object
+						groupMembers.append(memberResult)
+					else:
+						# It's a nested group
+						nestedGroupList.extend(memberResult)
+			elif 'person' in ldap_result[1]['objectClass']:
+				return ldap_result[1]['sAMAccountName'][0].lower() + '@' + self.realm
+
+		if len(groupMembers) > 0:
+			result = [[group, groupMembers]]
+		else:
+			result = []
+
+		result.extend(nestedGroupList)
+
+		return result
+
+def main():
+	adfm = AdFetchMembers()
+
+	adfm.read_config()
+	adfm.ldap_connect()
+
+	for group in [x[1] for x in adfm.config.items('groups')]:
+		parsedGroup = adfm.parseGroup(group)
+		
+		for memberGroup in parsedGroup:
+			print "# %s" % memberGroup[0]
+			print "require user %s" % ' '.join(sorted(memberGroup[1]))
+			print
+
+	for user in [x[1] for x in adfm.config.items('users')]:
+		print "# Explicit user - %s" % user
+		print "require user %s" % adfm.parseUser(user)
+		print
+	
+if __name__=='__main__':
+    main()
+
