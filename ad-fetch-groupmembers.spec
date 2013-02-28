@@ -1,5 +1,5 @@
 Name:		ad-fetch-groupmembers
-Version:	1.1
+Version:	1.3
 Release:	1%{?dist}
 Summary:	Fetches groupmembers from Active Directory for use in httpd
 
@@ -42,6 +42,12 @@ install -D -m 755 ad-fetch-groupmembers $RPM_BUILD_ROOT/%{_bindir}/ad-fetch-grou
 
 
 %changelog
+* Thu Feb 28 2013 HUT Build <midtolvuhopur@lsh.is> 1.3-1
+- 
+
+* Thu Feb 28 2013 Tomas Edwardsson
+- new package built with tito
+
 * Thu Feb 14 2013 Tomas Edwardsson <tommi@tommi.org> 1.0-1
 Initial packaging
 
