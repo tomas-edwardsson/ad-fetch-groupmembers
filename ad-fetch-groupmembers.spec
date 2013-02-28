@@ -1,5 +1,5 @@
 Name:		ad-fetch-groupmembers
-Version:	1.4
+Version:	1.5
 Release:	1%{?dist}
 Summary:	Fetches groupmembers from Active Directory for use in httpd
 
@@ -42,6 +42,9 @@ install -D -m 755 ad-fetch-groupmembers $RPM_BUILD_ROOT/%{_bindir}/ad-fetch-grou
 
 
 %changelog
+* Thu Feb 28 2013 Tomas Edwardsson <tommi@tommi.org> 1.5-1
+- Minor fix (tommi@tommi.org)
+
 * Thu Feb 28 2013 Tomas Edwardsson <tommi@tommi.org> 1.4-1
 - Added releasers configuration (tommi@tommi.org)
 - Initialized to use tito. (tommi@tommi.org)
