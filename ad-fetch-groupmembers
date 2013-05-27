@@ -82,7 +82,7 @@ class AdFetchMembers:
 				print "No Results for %s." % (base)
 				sys.exit(4)
 		except ldap.LDAPError, error_message:
-			print error_message
+			print "# LDAPError: %s" % error_message
 			sys.exit(5)
 		return result_set
 
