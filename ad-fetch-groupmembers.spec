@@ -1,5 +1,5 @@
 Name:		ad-fetch-groupmembers
-Version:	1.5
+Version:	1.6
 Release:	1%{?dist}
 Summary:	Fetches groupmembers from Active Directory for use in httpd
 
@@ -42,6 +42,11 @@ install -D -m 755 ad-fetch-groupmembers $RPM_BUILD_ROOT/%{_bindir}/ad-fetch-grou
 
 
 %changelog
+* Wed Apr 29 2015 Pall Valmundsson <pall.valmundsson@gmail.com> 1.6-1
+- RPM spec: don't replace config file on updates (pall.valmundsson@gmail.com)
+- Add case sensitive username (pall.valmundsson@gmail.com)
+- LDAPError causes config to be unparsable (pall.valmundsson@gmail.com)
+
 * Thu Feb 28 2013 Tomas Edwardsson <tommi@tommi.org> 1.5-1
 - Minor fix (tommi@tommi.org)
 
