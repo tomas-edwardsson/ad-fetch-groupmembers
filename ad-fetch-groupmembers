@@ -86,10 +86,20 @@ class AdFetchMembers:
 			sys.exit(5)
 		return result_set
 
+	def case_sensitive_require(self, samaccountname):
+		cs_user = samaccountname + '@' + self.realm
+		lc_user = samaccountname.lower() + '@' + self.realm
+
+		# Windows is case insensitive but Kerberos is not
+		if cs_user == lc_user:
+			return cs_user
+		else:
+			return "%s %s" % (cs_user, lc_user)
+
 	def parseUser(self, user):
 		rs = self.ldap_search(user)
 
-		return rs[0][1]['sAMAccountName'][0].lower() + '@' + self.realm
+		return self.case_sensitive_require(rs[0][1]['sAMAccountName'][0])
 
 	def parseGroup(self, group):
 		rs = self.ldap_search(group)
@@ -108,7 +118,7 @@ class AdFetchMembers:
 						# It's a nested group
 						nestedGroupList.extend(memberResult)
 			elif 'person' in ldap_result[1]['objectClass']:
-				return ldap_result[1]['sAMAccountName'][0].lower() + '@' + self.realm
+				return self.case_sensitive_require(ldap_result[1]['sAMAccountName'][0])
 
 		if len(groupMembers) > 0:
 			result = [[group, groupMembers]]
