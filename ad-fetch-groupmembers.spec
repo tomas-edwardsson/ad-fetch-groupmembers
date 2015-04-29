@@ -36,7 +36,7 @@ install -D -m 755 ad-fetch-groupmembers $RPM_BUILD_ROOT/%{_bindir}/ad-fetch-grou
 
 %files
 %doc README.md gpl-3.0.txt
-%{_sysconfdir}/ad-fetch-groupmembers.cfg
+%config(noreplace) %{_sysconfdir}/ad-fetch-groupmembers.cfg
 %{_bindir}/ad-fetch-groupmembers
 
 
